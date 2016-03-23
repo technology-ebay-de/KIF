@@ -38,17 +38,12 @@
 
 @implementation KIFAccessibilityEnabler
 
-+ (void)load
-{
-    @autoreleasepool {
-        if ([XCTestObservationCenter respondsToSelector:@selector(sharedTestObservationCenter)]) {
-            XCTestObservationCenter *observationCenter = [XCTestObservationCenter sharedTestObservationCenter];
-            [observationCenter addTestObserver:[self sharedAccessibilityEnabler]];
-        } else {
-            [[self sharedAccessibilityEnabler] _enableAccessibility];
-        }
-    }
+// Otherwise, this is handled in XCTestObservationCenter (KIFAccessibilityLoading)
+#ifndef __IPHONE_8_0
++ (void)load {
+    [[KIFAccessibilityEnabler sharedAccessibilityEnabler] _enableAccessibility];
 }
+#endif
 
 + (instancetype)sharedAccessibilityEnabler
 {
@@ -115,3 +110,22 @@
 }
 
 @end
+
+#ifdef __IPHONE_8_0
+
+@interface XCTestObservationCenter (KIFAccessibilityLoading)
+
+@end
+
+@implementation XCTestObservationCenter (KIFAccessibilityLoading)
+
++ (void)load {
+    @autoreleasepool {
+        XCTestObservationCenter *observationCenter = [XCTestObservationCenter sharedTestObservationCenter];
+        [observationCenter addTestObserver:[KIFAccessibilityEnabler sharedAccessibilityEnabler]];
+    }
+}
+
+@end
+
+#endif
