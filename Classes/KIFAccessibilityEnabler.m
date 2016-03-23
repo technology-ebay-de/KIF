@@ -11,24 +11,13 @@
 #import <dlfcn.h>
 
 
-#if __IPHONE_OS_VERSION_MAX_ALLOWED < 90000
-@protocol XCTestObservation <NSObject>
-@end
-
-@interface XCTestObservationCenter : NSObject
-+ (XCTestObservationCenter *)sharedTestObservationCenter;
-- (void)addTestObserver:(id <XCTestObservation>)testObserver;
-@end
-#endif
-
-
 @interface AccessibilitySettingsController
 - (void)setAXInspectorEnabled:(NSNumber*)enabled specifier:(id)specifier;
 - (NSNumber *)AXInspectorEnabled:(id)specifier;
 @end
 
 
-@interface KIFAccessibilityEnabler () <XCTestObservation>
+@interface KIFAccessibilityEnabler ()
 
 @property (nonatomic, strong) id axSettingPrefController;
 @property (nonatomic, strong) NSNumber *initialAccessibilityInspectorSetting;
@@ -44,7 +33,6 @@
     static KIFAccessibilityEnabler *_sharedAccessibilityEnabler;
     dispatch_once(&onceToken, ^{
         _sharedAccessibilityEnabler = [[self alloc] init];
-        [[XCTestObservationCenter sharedTestObservationCenter] addTestObserver:_sharedAccessibilityEnabler];
     });
 
     return _sharedAccessibilityEnabler;
@@ -93,9 +81,10 @@
     [self.axSettingPrefController setAXInspectorEnabled:self.initialAccessibilityInspectorSetting specifier:nil];
 }
 
-- (void)testBundleDidFinish:(NSBundle *)testBundle
-{
-    [self _resetAccessibilityInspector];
-}
-
 @end
+
+// It appears that if you register as a test observer too late, then you don't get the testBundleDidFinish: method called, so instead we use this is a workaround. This is also works well for test envs that don't have XCTestObservation
+__attribute__((destructor))
+void ResetAccessibilityInspector() {
+  [[KIFAccessibilityEnabler sharedAccessibilityEnabler] _resetAccessibilityInspector];
+}
