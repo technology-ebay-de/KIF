@@ -38,25 +38,19 @@
 
 @implementation KIFAccessibilityEnabler
 
-// Otherwise, this is handled in XCTestObservationCenter (KIFAccessibilityLoading)
-#ifndef __IPHONE_8_0
-+ (void)load {
-    [[KIFAccessibilityEnabler sharedAccessibilityEnabler] _enableAccessibility];
-}
-#endif
-
 + (instancetype)sharedAccessibilityEnabler
 {
     static dispatch_once_t onceToken;
     static KIFAccessibilityEnabler *_sharedAccessibilityEnabler;
     dispatch_once(&onceToken, ^{
         _sharedAccessibilityEnabler = [[self alloc] init];
+        [[XCTestObservationCenter sharedTestObservationCenter] addTestObserver:_sharedAccessibilityEnabler];
     });
 
     return _sharedAccessibilityEnabler;
 }
 
-- (void)_enableAccessibility
+- (void)enableAccessibility
 {
     NSDictionary *environment = [[NSProcessInfo processInfo] environment];
     NSString *simulatorRoot = [environment objectForKey:@"IPHONE_SIMULATOR_ROOT"];
@@ -97,11 +91,6 @@
 - (void)_resetAccessibilityInspector
 {
     [self.axSettingPrefController setAXInspectorEnabled:self.initialAccessibilityInspectorSetting specifier:nil];
-}
-
-- (void)testBundleWillStart:(NSBundle *)testBundle
-{
-    [self _enableAccessibility];
 }
 
 - (void)testBundleDidFinish:(NSBundle *)testBundle
