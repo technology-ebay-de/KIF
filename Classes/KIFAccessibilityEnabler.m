@@ -99,25 +99,3 @@
 }
 
 @end
-
-#ifdef __IPHONE_8_0
-
-@interface XCTestObservationCenter (KIFAccessibilityLoading)
-
-@end
-
-@implementation XCTestObservationCenter (KIFAccessibilityLoading)
-
-+ (void)load {
-    @autoreleasepool {
-        // If we access the sharedTestObservationCenter before XCTest gets a chance to do its own setup with the singleton, then this breaks XCTest logging somehow. Even just doing our setup in the load method directly is too early, so we dispatch the setup to happen sometime in the near future.
-        dispatch_async(dispatch_get_main_queue(), ^{
-            XCTestObservationCenter *observationCenter = [XCTestObservationCenter sharedTestObservationCenter];
-            [observationCenter addTestObserver:[KIFAccessibilityEnabler sharedAccessibilityEnabler]];
-        });
-    }
-}
-
-@end
-
-#endif
