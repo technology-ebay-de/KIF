@@ -6,7 +6,7 @@
 //
 //
 
-@interface TableViewController : UITableViewController <UITableViewDelegate>
+@interface TableViewController : UITableViewController <UITableViewDataSource, UITableViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UISearchBar *searchBar;
 
@@ -75,6 +75,63 @@
         // [self.tableView reloadData];
     }
     
+}
+
+#pragma mark - UITableViewDataSource
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 3;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    switch (section) {
+        case 0: return 3;
+        case 1: return 38;
+        case 2: return 2;
+        default: return 0;
+    }
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    switch (indexPath.section) {
+        case 0: {
+            switch (indexPath.row) {
+                case 0:
+                    return [self tableView:tableView defaultCellForRowAtIndexPath:indexPath text:@"First Cell"];
+                case 1:
+                    return [tableView dequeueReusableCellWithIdentifier:@"Switch" forIndexPath:indexPath];
+                case 2:
+                    return [tableView dequeueReusableCellWithIdentifier:@"TextField" forIndexPath:indexPath];
+            }
+        }
+        case 1:
+            return [self tableView:tableView defaultCellForRowAtIndexPath:indexPath text:[NSString stringWithFormat:@"Cell %zd", indexPath.row]];
+        case 2: {
+            switch (indexPath.row) {
+                case 0:
+                    return [tableView dequeueReusableCellWithIdentifier:@"Button" forIndexPath:indexPath];
+                case 1:
+                    return [self tableView:tableView defaultCellForRowAtIndexPath:indexPath text:@"Last Cell"];
+            }
+        }
+    }
+
+    return nil; // Shouldn't get here at all.
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+    return [NSString stringWithFormat:@"Section-%zd", section];
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView defaultCellForRowAtIndexPath:(NSIndexPath *)indexPath text:(NSString *)text
+{
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Default" forIndexPath:indexPath];
+    cell.textLabel.text = text;
+    return cell;
 }
 
 @end
