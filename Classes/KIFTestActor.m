@@ -36,8 +36,6 @@
 
 - (instancetype)initWithFile:(NSString *)file line:(NSInteger)line delegate:(id<KIFTestActorDelegate>)delegate
 {
-    NSAssert(KIFAccessibilityEnabled(), @"The method `KIFEnableAccessibility()` hasn't been called yet. Either call it explicitly before any of your tests run, or subclass KIFTestCase to get this behavior automatically.");
-
     self = [super init];
     if (self) {
         _file = file;
@@ -46,6 +44,7 @@
         _executionBlockTimeout = [[self class] defaultTimeout];
         _animationWaitingTimeout = [[self class] defaultAnimationWaitingTimeout];
         _animationStabilizationTimeout = [[self class] defaultAnimationStabilizationTimeout];
+        _mainThreadDispatchStabilizationTimeout = [[self class] defaultMainThreadDispatchStabilizationTimeout];
     }
     return self;
 }
@@ -75,6 +74,13 @@
 
 - (BOOL)tryRunningBlock:(KIFTestExecutionBlock)executionBlock complete:(KIFTestCompletionBlock)completionBlock timeout:(NSTimeInterval)timeout error:(out NSError **)error
 {
+    // Ensure that regardless of whether tests subclass KIFTestCase or not,
+    // accessibility will have been enabled.
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        KIFEnableAccessibility();
+    });
+
     NSDate *startDate = [NSDate date];
     KIFTestStepResult result;
     NSError *internalError;
@@ -127,6 +133,7 @@
 
 static NSTimeInterval KIFTestStepDefaultAnimationWaitingTimeout = 0.5;
 static NSTimeInterval KIFTestStepDefaultAnimationStabilizationTimeout = 0.5;
+static NSTimeInterval KIFTestStepDefaultMainThreadDispatchStabilizationTimeout = 0.5;
 static NSTimeInterval KIFTestStepDefaultTimeout = 10.0;
 static NSTimeInterval KIFTestStepDelay = 0.1;
 
@@ -149,6 +156,17 @@ static NSTimeInterval KIFTestStepDelay = 0.1;
 {
     KIFTestStepDefaultAnimationStabilizationTimeout = newDefaultAnimationStabilizationTimeout;
 }
+
++ (NSTimeInterval)defaultMainThreadDispatchStabilizationTimeout
+{
+    return KIFTestStepDefaultMainThreadDispatchStabilizationTimeout;
+}
+
++ (void)setDefaultMainThreadDispatchStabilizationTimeout:(NSTimeInterval)newDefaultMainThreadDispatchStabilizationTimeout;
+{
+    KIFTestStepDefaultMainThreadDispatchStabilizationTimeout = newDefaultMainThreadDispatchStabilizationTimeout;
+}
+
 
 + (NSTimeInterval)defaultTimeout;
 {
